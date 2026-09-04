@@ -1,0 +1,32 @@
+ID del Caso de Uso: CU-01 
+Nombre: Registrar socio 
+Actor Principal: Recepcionista / Administrador
+ Alcance / Nivel: Sistema / Meta de usuario 
+Stakeholders e intereses:
+Recepcionista → Registrar al nuevo socio de manera rápida y sin errores.
+Socio → Obtener su cuenta dada de alta para poder abonar un plan y acceder al gimnasio. Disparador (Trigger): El recepcionista selecciona la opción de registrar un nuevo socio en la interfaz de gestión. Prioridad / Frecuencia: Alta / Uso diario constante. Reglas de negocio relacionadas: RN-01 (Validación de mayoría de edad y formato de correo único).
+1. BREVE DESCRIPCIÓN
+Permite a un recepcionista o administrador ingresar los datos personales de un nuevo cliente en el sistema para dar de alta su perfil en el gimnasio.
+2. PRECONDICIONES
+El sistema debe estar conectado a la Base de Datos.
+El usuario operador debe tener una sesión activa con permisos de recepción y un Token JWT válido.
+3. FLUJO PRINCIPAL (Camino Feliz - HTTP 201)
+El Actor envía una petición al endpoint POST /api/socios con el cuerpo JSON conteniendo los datos del socio (nombre, DNI, correo electrónico, teléfono).
+El Sistema (Capa de Presentación) valida que el esquema del JSON sea correcto y cumpla con los tipos de datos esperados.
+El Sistema (Capa de Negocio) verifica que el DNI o el correo electrónico no se encuentren registrados previamente en el sistema.
+El Sistema persiste los datos del nuevo socio en la Base de Datos a través de la Capa de Persistencia.
+El Sistema devuelve un código HTTP 201 Created junto con la información del socio recién creado y su identificador asignado.
+4. FLUJOS ALTERNATIVOS (Caminos Tristes / Excepciones)
+2a. Datos incompletos o formato inválido (HTTP 400 Bad Request):
+Si en el Paso 2 el JSON enviado no incluye campos obligatorios (como el DNI) o el correo tiene un formato incorrecto.
+La Capa de Presentación rechaza la solicitud de forma inmediata.
+El Sistema devuelve un código HTTP 400 Bad Request detallando el error de validación de esquema. Fin del caso de uso.
+3a. Socio ya existente / Duplicado (HTTP 409 Conflict):
+Si en el Paso 3 el DNI o el correo electrónico ya figuran en los registros de la Base de Datos (violación de la RN-01).
+La Capa de Negocio frena la ejecución y lanza una excepción de dominio.
+El Sistema devuelve un código HTTP 409 Conflict con el mensaje: "El DNI o correo electrónico ya se encuentran registrados". Fin del caso de uso.
+5. POSTCONDICIONES
+Se ha creado un nuevo registro persistente en la entidad Socios de la Base de Datos.
+El socio queda habilitado en el sistema para proceder posteriormente con la contratación de un plan de membresía.
+
+

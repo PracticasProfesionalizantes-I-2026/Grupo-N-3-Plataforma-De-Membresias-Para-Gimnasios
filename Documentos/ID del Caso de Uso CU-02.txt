@@ -1,0 +1,30 @@
+ID del Caso de Uso: CU-02 
+Nombre: Gestionar planes de membresía 
+Actor Principal: Administrador 
+Alcance / Nivel: Sistema / Meta de usuario 
+Stakeholders e intereses:
+Administrador → Dar de alta, modificar o dar de baja los planes del gimnasio (ej. mensual, quincenal, anual) para mantener actualizada la oferta.
+Socio → Visualizar los planes disponibles y sus costos actualizados. Disparador (Trigger): El administrador selecciona la opción de crear o modificar un plan de membresía en el panel de gestión. Prioridad / Frecuencia: Media / Uso ocasional (según actualización de tarifas o nuevos servicios). Reglas de negocio relacionadas: RN-02 (Los precios de los planes no pueden ser negativos y el nombre del plan debe ser único).
+1. BREVE DESCRIPCIÓN
+Permite al administrador gestionar el catálogo de planes de membresía del gimnasio (crear nuevos planes, modificar sus precios o desactivarlos).
+2. PRECONDICIONES
+El sistema debe estar conectado a la Base de Datos.
+El usuario operador debe tener una sesión activa con permisos exclusivos de Administrador y un Token JWT válido.
+3. FLUJO PRINCIPAL (Camino Feliz - HTTP 201/200)
+El Actor envía una petición al endpoint POST /api/planes (o PUT para modificar) con los datos del plan (nombre, descripción, precio, duración en días).
+El Sistema (Capa de Presentación) valida que el esquema del JSON y los tipos de datos sean correctos.
+El Sistema (Capa de Negocio) verifica que el precio sea mayor a cero y que no exista otro plan activo con el mismo nombre (aplicando la regla RN-02).
+El Sistema persiste o actualiza los datos en la Capa de Persistencia (Base de Datos).
+El Sistema devuelve un código HTTP 201 Created (si es creación) o HTTP 200 OK (si es modificación) con los detalles del plan guardado.
+4. FLUJOS ALTERNATIVOS (Caminos Tristes / Excepciones)
+2a. Datos incompletos o precio inválido (HTTP 400 Bad Request):
+Si en el Paso 2 faltan campos obligatorios o el precio ingresado es menor o igual a cero.
+La Capa de Presentación rechaza la solicitud automáticamente.
+El Sistema devuelve un código HTTP 400 Bad Request detallando el error de validación. Fin del caso de uso.
+3a. Plan duplicado o nombre existente (HTTP 409 Conflict):
+Si en el Paso 3 el administrador intenta registrar un plan con un nombre que ya se encuentra en uso.
+La Capa de Negocio detecta la duplicidad (violación de la RN-02).
+El Sistema devuelve un código HTTP 409 Conflict indicando que ya existe un plan con ese nombre. Fin del caso de uso.
+5. POSTCONDICIONES
+Se actualiza el registro de planes en la Base de Datos.
+Los cambios quedan reflejados inmediatamente para que los socios puedan visualizarlos o contratarlos.

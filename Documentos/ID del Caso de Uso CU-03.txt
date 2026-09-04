@@ -1,0 +1,32 @@
+ID del Caso de Uso: CU-03 
+Nombre: Gestionar planes y horarios 
+Actor Principal: Administrador / Entrenador 
+Alcance / Nivel: Sistema / Meta de usuario 
+Stakeholders e intereses:
+Administrador / Entrenador → Organizar la disponibilidad horaria de las clases o turnos del gimnasio y asociarlos a los planes de membresía correspondientes.
+Socio → Consultar los horarios disponibles y reservar turnos según su plan contratado. Disparador (Trigger): El administrador o entrenador selecciona la opción de configurar o modificar los horarios y cupos de las actividades en el sistema. Prioridad / Frecuencia: Alta / Uso diario. Reglas de negocio relacionadas: RN-03 (No se pueden asignar horarios superpuestos para un mismo recurso/profesor y se debe respetar el cupo máximo de la sala).
+1. BREVE DESCRIPCIÓN
+Permite gestionar la programación de horarios, días y cupos máximos de las distintas actividades o clases que ofrece el gimnasio, vinculándolas a los planes de membresía.
+2. PRECONDICIONES
+El sistema debe estar conectado a la Base de Datos.
+El usuario operador debe tener una sesión activa con permisos de Administrador o Entrenador y un Token JWT válido.
+Deben existir planes de membresía y actividades creadas previamente en el sistema.
+3. FLUJO PRINCIPAL (Camino Feliz - HTTP 201/200)
+El Actor envía una petición al endpoint POST /api/horarios (o PUT para modificar) con los datos de la programación (ID de actividad, día de la semana, hora de inicio, hora de fin, cupo máximo y profesor asignado).
+El Sistema (Capa de Presentación) valida que el formato del JSON y los campos obligatorios sean correctos.
+El Sistema (Capa de Negocio) verifica que no exista un conflicto de horarios para el profesor asignado y que el cupo sea un valor positivo (aplicando la regla RN-03).
+El Sistema persiste o actualiza la programación en la Capa de Persistencia (Base de Datos).
+El Sistema devuelve un código HTTP 201 Created (o HTTP 200 OK) confirmando el registro exitoso del horario.
+4. FLUJOS ALTERNATIVOS (Caminos Tristes / Excepciones)
+2a. Datos incompletos o formato de hora inválido (HTTP 400 Bad Request):
+Si en el Paso 2 faltan datos requeridos o el formato de las horas es incorrecto (por ejemplo, hora de inicio posterior a la de fin).
+La Capa de Presentación rechaza la solicitud de inmediato.
+El Sistema devuelve un código HTTP 400 Bad Request con el detalle del error. Fin del caso de uso.
+3a. Superposición de horarios (HTTP 409 Conflict):
+Si en el Paso 3 se detecta que el profesor o la sala ya tienen asignada otra actividad en ese mismo rango horario (violación de la RN-03).
+La Capa de Negocio frena la ejecución.
+El Sistema devuelve un código HTTP 409 Conflict indicando que existe un conflicto de horarios. Fin del caso de uso.
+5. POSTCONDICIONES
+Se actualiza la agenda de horarios en la Base de Datos.
+Los nuevos turnos quedan habilitados para que los socios puedan visualizarlos y realizar sus reservas.
+

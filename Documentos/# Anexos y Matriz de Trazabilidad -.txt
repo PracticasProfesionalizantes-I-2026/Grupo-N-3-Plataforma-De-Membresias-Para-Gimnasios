@@ -1,0 +1,14 @@
+# Anexos y Matriz de Trazabilidad - Sistema Gym Membership
+
+## 1. Anexo: Códigos HTTP Utilizados
+* **201 Created**: Utilizado cuando un recurso (como un nuevo socio o un plan de membresía) se crea exitosamente en el sistema.
+* **200 OK**: Utilizado para confirmar operaciones de actualización o consulta exitosas.
+* **400 Bad Request**: Utilizado cuando una validación falla (ej. campos vacíos, formato incorrecto de email o precios inválidos).
+* **409 Conflict**: Utilizado cuando existe un conflicto en la lógica de negocio (ej. superposición de horarios de profesores).
+
+## 2. Matriz de Trazabilidad
+| ID Caso de Uso | Regla de Negocio Asociada | Código HTTP de Error / Éxito | Estado de Verificación |
+| :--- | :--- | :--- | :--- |
+| **CU-01** | RN-01, RN-02 | 201 Created / 400 Bad Request | Verificado (Test Unitario OK) |
+| **CU-02** | RN-03, RN-04 | 201 Created / 400 Bad Request | Verificado (Test Unitario OK) |
+| **CU-03** | RN-05, RN-06 | 200 OK / 409 Conflict | Verificado (Test de Integración OK) |
