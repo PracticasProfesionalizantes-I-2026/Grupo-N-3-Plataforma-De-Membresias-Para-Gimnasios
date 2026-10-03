@@ -1,0 +1,24 @@
+meta {
+  name: Registrar Horario (CU-03)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/horarios
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "actividadId": "{{actividadId}}",
+    "planMembresiaId": "{{planId}}",
+    "profesor": "Lucas Gomez",
+    "sala": "Sala de Ciclismo 1",
+    "diaSemana": 1,
+    "horaInicio": "18:00:00",
+    "horaFin": "19:00:00",
+    "cupoMaximo": 25
+  }
+}
