@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GymPlatform.API/GymPlatform.API.csproj" />
+    <Project Path="src/GymPlatform.BusinessLogic/GymPlatform.BusinessLogic.csproj" />
+    <Project Path="src/GymPlatform.DataAccess/GymPlatform.DataAccess.csproj" />
+    <Project Path="src/GymPlatform.Migrations/GymPlatform.Migrations.csproj" />
+    <Project Path="src/GymPlatform.Shared/GymPlatform.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GymPlatform.API.Tests/GymPlatform.API.Tests.csproj" />
+    <Project Path="tests/GymPlatform.BusinessLogic.Tests/GymPlatform.BusinessLogic.Tests.csproj" />
+  </Folder>
+</Solution>

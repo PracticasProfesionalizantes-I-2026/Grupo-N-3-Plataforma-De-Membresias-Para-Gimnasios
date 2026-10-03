@@ -1,0 +1,20 @@
+meta {
+  name: Crear Plan (CU-02)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/planes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Plan Trimestral Fit",
+    "descripcion": "Acceso total por 90 días a sala de máquinas y pileta.",
+    "precio": 70000.00,
+    "duracionDias": 90
+  }
+}

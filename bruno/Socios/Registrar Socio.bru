@@ -1,0 +1,21 @@
+meta {
+  name: Registrar Socio (CU-01)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/socios
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Esteban Quito",
+    "dni": "42111333",
+    "email": "esteban.quito@email.com",
+    "telefono": "+54 9 11 3322-1100",
+    "fechaNacimiento": "1998-07-20"
+  }
+}
