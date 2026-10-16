@@ -1,10 +1,10 @@
-# GYM UP - Plataforma de Membresías y Gestión para Gimnasios 🏋️‍♂️
+# GYM UP - Plataforma de Membresías y Gestión para Gimnasios 
 
 API RESTful desarrollada en **.NET 10** bajo una estricta **Arquitectura en Capas (N-Tier)**, diseñada para administrar de forma integral y robusta la registración de socios, planes de membresía, actividades y la asignación de horarios sin solapamientos.
 
 ---
 
-## 🏛️ Arquitectura N-Tier y Flujo de Datos
+##  Arquitectura N-Tier y Flujo de Datos
 
 El diseño del sistema cumple de forma estricta con el principio de separación de responsabilidades y el flujo unidireccional de control e inversión de dependencias:
 
@@ -22,7 +22,7 @@ graph TD
     DA -.->|Usa Excepciones| SH
 ```
 
-### 📂 Estructura de Proyectos y Carpetas
+###  Estructura de Proyectos y Carpetas
 
 ```text
 c:\Repos\Grupo-N-3-Plataforma-De-Membresias-Para-Gimnasios\
@@ -50,7 +50,7 @@ c:\Repos\Grupo-N-3-Plataforma-De-Membresias-Para-Gimnasios\
 
 ---
 
-## ⚡ Instrucciones de Ejecución
+##  Instrucciones de Ejecución
 
 ### 1. Requisitos Previos
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) instalado.
@@ -77,7 +77,7 @@ Al iniciar la aplicación, navegue en su navegador web a:
 
 ---
 
-## 📋 Catálogo de Endpoints RESTful y Ejemplos
+##  Catálogo de Endpoints RESTful y Ejemplos
 
 ### 1. Socios (`/api/socios`) - Caso de Uso CU-01
 - `GET /api/socios`: Lista todos los socios registrados.
@@ -156,7 +156,7 @@ Al iniciar la aplicación, navegue en su navegador web a:
 
 ---
 
-## 🧪 Matriz de Verificación de Casos de Uso y Reglas
+##  Matriz de Verificación de Casos de Uso y Reglas
 
 | Caso de Uso | Regla de Negocio | Código Éxito / Error | Prueba Asociada |
 | :--- | :--- | :--- | :--- |
@@ -166,7 +166,7 @@ Al iniciar la aplicación, navegue en su navegador web a:
 
 ---
 
-## 📁 Colección de Solicitudes Bruno
+## Colección de Solicitudes Bruno
 La carpeta `/bruno` contiene la colección estructurada y lista para importar en [UseBruno](https://www.usebruno.com/):
 - `bruno/Socios/`
 - `bruno/Planes/`
