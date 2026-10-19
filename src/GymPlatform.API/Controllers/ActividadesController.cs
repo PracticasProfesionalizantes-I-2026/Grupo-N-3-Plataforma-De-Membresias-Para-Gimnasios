@@ -1,6 +1,7 @@
 using GymPlatform.BusinessLogic.Interfaces;
 using GymPlatform.Shared.DTOs;
 using GymPlatform.Shared.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GymPlatform.API.Controllers;
@@ -8,6 +9,7 @@ namespace GymPlatform.API.Controllers;
 [ApiController]
 [Route("api/actividades")]
 [Produces("application/json")]
+[Authorize]
 public class ActividadesController : ControllerBase
 {
     private readonly IActividadService _actividadService;
@@ -18,6 +20,7 @@ public class ActividadesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Administrador,Entrenador,Socio,Recepcionista")]
     [ProducesResponseType(typeof(IEnumerable<ActividadResponseDTO>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
@@ -33,6 +36,7 @@ public class ActividadesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Administrador,Entrenador,Socio,Recepcionista")]
     [ProducesResponseType(typeof(ActividadResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
@@ -53,6 +57,7 @@ public class ActividadesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Administrador,Entrenador")]
     [ProducesResponseType(typeof(ActividadResponseDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -78,6 +83,7 @@ public class ActividadesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Administrador,Entrenador")]
     [ProducesResponseType(typeof(ActividadResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -108,6 +114,7 @@ public class ActividadesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Administrador,Entrenador")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]

@@ -33,6 +33,11 @@ public class PlanMembresiaRepository : IPlanMembresiaRepository
         return await _context.Horarios.AsNoTracking().AnyAsync(h => h.PlanMembresiaId == id);
     }
 
+    public async Task<bool> HasActiveMembresiasAsync(Guid id)
+    {
+        return await _context.Membresias.AsNoTracking().AnyAsync(m => m.PlanMembresiaId == id && m.Estado == Shared.Enums.EstadoMembresia.Activa);
+    }
+
     public async Task<PlanMembresia> CreateAsync(PlanMembresia plan)
     {
         plan.Id = Guid.NewGuid();

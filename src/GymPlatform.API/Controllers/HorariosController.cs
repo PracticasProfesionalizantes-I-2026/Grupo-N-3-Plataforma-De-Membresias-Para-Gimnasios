@@ -1,6 +1,7 @@
 using GymPlatform.BusinessLogic.Interfaces;
 using GymPlatform.Shared.DTOs;
 using GymPlatform.Shared.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GymPlatform.API.Controllers;
@@ -8,6 +9,7 @@ namespace GymPlatform.API.Controllers;
 [ApiController]
 [Route("api/horarios")]
 [Produces("application/json")]
+[Authorize]
 public class HorariosController : ControllerBase
 {
     private readonly IHorarioService _horarioService;
@@ -18,6 +20,7 @@ public class HorariosController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Administrador,Entrenador,Socio,Recepcionista")]
     [ProducesResponseType(typeof(IEnumerable<HorarioResponseDTO>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
@@ -33,6 +36,7 @@ public class HorariosController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Administrador,Entrenador,Socio,Recepcionista")]
     [ProducesResponseType(typeof(HorarioResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
@@ -53,6 +57,7 @@ public class HorariosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Administrador,Entrenador")]
     [ProducesResponseType(typeof(HorarioResponseDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -83,6 +88,7 @@ public class HorariosController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Administrador,Entrenador")]
     [ProducesResponseType(typeof(HorarioResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -113,6 +119,7 @@ public class HorariosController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Administrador,Entrenador")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]

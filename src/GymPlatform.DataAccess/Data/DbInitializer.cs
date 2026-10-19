@@ -12,6 +12,8 @@ public static class DbInitializer
 
         if (await context.Socios.AnyAsync())
         {
+            await SeedUsuariosAsync(context);
+            await context.SaveChangesAsync();
             return; // Ya fue inicializada la base de datos con datos de prueba
         }
 
@@ -141,6 +143,117 @@ public static class DbInitializer
 
         await context.Horarios.AddRangeAsync(horario1, horario2, horario3);
 
+        // 5. Sembrado de Membresías y Pagos iniciales
+        var membresia1 = new Membresia
+        {
+            Id = Guid.NewGuid(),
+            SocioId = socio1.Id,
+            PlanMembresiaId = planFull.Id,
+            FechaInicio = DateTime.UtcNow.AddDays(-15),
+            FechaVencimiento = DateTime.UtcNow.AddDays(15),
+            Estado = Shared.Enums.EstadoMembresia.Activa,
+            FechaRegistro = DateTime.UtcNow.AddDays(-15)
+        };
+
+        var pago1 = new Pago
+        {
+            Id = Guid.NewGuid(),
+            MembresiaId = membresia1.Id,
+            Monto = planFull.Precio,
+            FechaPago = DateTime.UtcNow.AddDays(-15),
+            MetodoPago = Shared.Enums.MetodoPago.TarjetaCredito,
+            NumeroComprobante = "REC-SEED-001",
+            Estado = Shared.Enums.EstadoPago.Aprobado,
+            TransaccionExternaId = "TX-GATEWAY-INIT-101"
+        };
+
+        var membresia2 = new Membresia
+        {
+            Id = Guid.NewGuid(),
+            SocioId = socio2.Id,
+            PlanMembresiaId = planBasico.Id,
+            FechaInicio = DateTime.UtcNow.AddDays(-35),
+            FechaVencimiento = DateTime.UtcNow.AddDays(-5), // Vencida para probar renovación
+            Estado = Shared.Enums.EstadoMembresia.Vencida,
+            FechaRegistro = DateTime.UtcNow.AddDays(-35)
+        };
+
+        var pago2 = new Pago
+        {
+            Id = Guid.NewGuid(),
+            MembresiaId = membresia2.Id,
+            Monto = planBasico.Precio,
+            FechaPago = DateTime.UtcNow.AddDays(-35),
+            MetodoPago = Shared.Enums.MetodoPago.Transferencia,
+            NumeroComprobante = "REC-SEED-002",
+            Estado = Shared.Enums.EstadoPago.Aprobado,
+            TransaccionExternaId = "TX-GATEWAY-INIT-102"
+        };
+
+        await context.Membresias.AddRangeAsync(membresia1, membresia2);
+        await context.Pagos.AddRangeAsync(pago1, pago2);
+
+        // 6. Sembrado de Usuarios con diferentes roles para pruebas
+        await SeedUsuariosAsync(context);
+
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedUsuariosAsync(GymDbContext context)
+    {
+        if (await context.Usuarios.AnyAsync())
+        {
+            return;
+        }
+
+        var admin = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            NombreUsuario = "admin",
+            Email = "admin@gymup.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+            Rol = Shared.Enums.RolUsuario.Administrador,
+            NombreCompleto = "Administrador Principal",
+            Activo = true,
+            FechaCreacion = DateTime.UtcNow
+        };
+
+        var entrenador = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            NombreUsuario = "entrenador",
+            Email = "entrenador@gymup.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Entrenador123!"),
+            Rol = Shared.Enums.RolUsuario.Entrenador,
+            NombreCompleto = "Lucas Gomez (Entrenador)",
+            Activo = true,
+            FechaCreacion = DateTime.UtcNow
+        };
+
+        var recepcionista = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            NombreUsuario = "recepcionista",
+            Email = "recepcion@gymup.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Recep123!"),
+            Rol = Shared.Enums.RolUsuario.Recepcionista,
+            NombreCompleto = "Laura Gomez (Recepcionista)",
+            Activo = true,
+            FechaCreacion = DateTime.UtcNow
+        };
+
+        var socioUser = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            NombreUsuario = "socio",
+            Email = "carlos.rodriguez@email.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Socio123!"),
+            Rol = Shared.Enums.RolUsuario.Socio,
+            NombreCompleto = "Carlos Rodriguez (Socio)",
+            Activo = true,
+            FechaCreacion = DateTime.UtcNow
+        };
+
+        await context.Usuarios.AddRangeAsync(admin, entrenador, recepcionista, socioUser);
     }
 }

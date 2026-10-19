@@ -1,6 +1,7 @@
 using GymPlatform.BusinessLogic.Interfaces;
 using GymPlatform.Shared.DTOs;
 using GymPlatform.Shared.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GymPlatform.API.Controllers;
@@ -8,6 +9,7 @@ namespace GymPlatform.API.Controllers;
 [ApiController]
 [Route("api/socios")]
 [Produces("application/json")]
+[Authorize]
 public class SociosController : ControllerBase
 {
     private readonly ISocioService _socioService;
@@ -18,6 +20,7 @@ public class SociosController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Administrador,Recepcionista")]
     [ProducesResponseType(typeof(IEnumerable<SocioResponseDTO>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
@@ -33,6 +36,7 @@ public class SociosController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Administrador,Recepcionista,Socio")]
     [ProducesResponseType(typeof(SocioResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
@@ -53,6 +57,7 @@ public class SociosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Administrador,Recepcionista")]
     [ProducesResponseType(typeof(SocioResponseDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -78,6 +83,7 @@ public class SociosController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Administrador,Recepcionista")]
     [ProducesResponseType(typeof(SocioResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -108,6 +114,7 @@ public class SociosController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Administrador,Recepcionista")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
