@@ -8,5 +8,6 @@ public interface IPlanMembresiaService
     Task<PlanMembresiaResponseDTO> GetByIdAsync(Guid id);
     Task<PlanMembresiaResponseDTO> CreateAsync(PlanMembresiaCreateDTO dto);
     Task<PlanMembresiaResponseDTO> UpdateAsync(Guid id, PlanMembresiaUpdateDTO dto);
+    Task<PlanMembresiaResponseDTO> DesactivarAsync(Guid id);
     Task DeleteAsync(Guid id);
 }

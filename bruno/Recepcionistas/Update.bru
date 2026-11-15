@@ -1,0 +1,38 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/recepcionistas/{{recepcionistaId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "Valeria Sanchez Diaz",
+    "turno": "Tarde",
+    "legajo": "REC-10492"
+  }
+}
+
+tests {
+  test("Debe responder con status 200 OK o 204 No Content al actualizar", function() {
+    expect([200, 204]).to.include(res.getStatus());
+  });
+
+  test("Si devuelve cuerpo, debe reflejar el nuevo turno o nombre", function() {
+    if (res.getStatus() === 200) {
+      const data = res.getBody ? res.getBody() : res.body;
+      expect(data.turno).to.equal("Tarde");
+      expect(data.nombre).to.equal("Valeria Sanchez Diaz");
+    }
+  });
+}
+

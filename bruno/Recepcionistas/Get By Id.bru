@@ -1,0 +1,41 @@
+meta {
+  name: Get By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/recepcionistas
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJiMDMyNmNjNS0zNDE0LTQyNTUtYWU4NC0yY2I1MmMwNjhmNzkiLCJ1bmlxdWVfbmFtZSI6ImFkbWluIiwiZW1haWwiOiJhZG1pbkBneW11cC5jb20iLCJyb2xlIjoiQWRtaW5pc3RyYWRvciIsIk5vbWJyZUNvbXBsZXRvIjoiQWRtaW5pc3RyYWRvciBQcmluY2lwYWwiLCJqdGkiOiJkOWNmM2E0My05ZTE4LTQ5NDYtODMxMi1iYTFhNDY4ZTg2NjQiLCJuYmYiOjE3OTQ3NjMwNjQsImV4cCI6MTc5NDc5MTg2NCwiaWF0IjoxNzk0NzYzMDY0LCJpc3MiOiJHeW1QbGF0Zm9ybUFQSSIsImF1ZCI6Ikd5bVBsYXRmb3JtQ2xpZW50In0.mhvQB1C0WUUTm_2PeS7sRRwkzNP1gxvGR4RVxoqL2PU
+}
+
+body:json {
+  {
+    "nombreUsuario": "recepcionista_nuevo",
+    "email": "recepcion@gymup.com",
+    "password": "Password123",
+    "nombreCompleto": "Juan Perez",
+    "rol": "Recepcionista"
+  }
+}
+
+tests {
+  test("Debe responder con status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Debe devolver el recepcionista con el Id consultado", function() {
+    const data = res.getBody ? res.getBody() : res.body;
+    expect(data).to.be.an("object");
+    expect(data.id).to.equal(bru.getEnvVar("recepcionistaId"));
+  });
+}

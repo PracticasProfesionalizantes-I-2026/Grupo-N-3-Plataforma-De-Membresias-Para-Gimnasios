@@ -1,0 +1,35 @@
+ID del Caso de Uso: CU-04 
+Nombre: Gestión de actividades 
+Actor Principal: Administrador / Entrenador 
+Alcance / Nivel: Sistema / Meta de usuario 
+Stakeholders e intereses:
+Administrador / Entrenador → Registrar, actualizar y dar de baja actividades del gimnasio (ej. Yoga, CrossFit, Spinning) manteniendo organizado el catálogo disponible.
+Socio → Conocer las disciplinas y actividades deportivas disponibles para su participación. Disparador (Trigger): El administrador o entrenador selecciona la opción de gestionar el catálogo de actividades en la interfaz de gestión. Prioridad / Frecuencia: Media / Periódico. Reglas de negocio relacionadas: RN-04 (El nombre de la actividad es obligatorio y debe ser único en el sistema; no se puede eliminar una actividad si tiene horarios asociados).
+1. BREVE DESCRIPCIÓN
+Permite gestionar el catálogo de actividades deportivas y disciplinas del gimnasio (crear nuevas actividades, actualizar su nombre o descripción y eliminarlas bajo control de integridad referencial).
+2. PRECONDICIONES
+El sistema debe estar conectado a la Base de Datos.
+El usuario operador debe tener una sesión activa con permisos de Administrador o Entrenador y un Token JWT válido.
+3. FLUJO PRINCIPAL (Camino Feliz - HTTP 201/200)
+El Actor envía una petición al endpoint POST /api/actividades (o PUT para modificar) con los datos de la actividad (nombre, descripción).
+El Sistema (Capa de Presentación) valida que el esquema del JSON y los campos obligatorios cumplan con los requisitos mínimos.
+El Sistema (Capa de Negocio) verifica que no exista otra actividad registrada con el mismo nombre (aplicando la regla RN-04 de unicidad de nombre).
+El Sistema persiste o actualiza los datos en la Capa de Persistencia (Base de Datos).
+El Sistema devuelve un código HTTP 201 Created (si es creación) o HTTP 200 OK (si es modificación) junto con los datos de la actividad procesada.
+4. FLUJOS ALTERNATIVOS (Caminos Tristes / Excepciones)
+2a. Datos incompletos o inválidos (HTTP 400 Bad Request):
+Si en el Paso 2 faltan campos obligatorios como el nombre de la actividad o los tipos de datos no son válidos.
+La Capa de Presentación rechaza la solicitud de forma inmediata.
+El Sistema devuelve un código HTTP 400 Bad Request con el detalle del error de validación. Fin del caso de uso.
+3a. Actividad duplicada o nombre existente (HTTP 409 Conflict):
+Si en el Paso 3 el operador intenta registrar o renombrar una actividad con un nombre que ya se encuentra registrado (violación de la RN-04).
+La Capa de Negocio frena la operación y lanza una excepción de duplicidad.
+El Sistema devuelve un código HTTP 409 Conflict con el mensaje: "Ya existe una actividad registrada con ese nombre". Fin del caso de uso.
+3b. Eliminación bloqueada por horarios vinculados (HTTP 409 Conflict):
+Si el operador solicita la eliminación de una actividad mediante DELETE /api/actividades/{id} y dicha actividad posee horarios o clases asignadas.
+La Capa de Negocio detecta la existencia de horarios asociados (violación de integridad referencial de negocio RN-04).
+El Sistema devuelve un código HTTP 409 Conflict informando la imposibilidad de eliminar la actividad debido a los horarios asignados. Fin del caso de uso.
+5. POSTCONDICIONES
+Se crea, actualiza o elimina el registro de la actividad en la Base de Datos.
+El catálogo de disciplinas queda actualizado para su posterior asignación de horarios y consulta por parte de los socios.
+

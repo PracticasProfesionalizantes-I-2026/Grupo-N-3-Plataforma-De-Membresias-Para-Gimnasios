@@ -1,0 +1,47 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/socios
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "Lucas",
+    "apellido": "Alvarez",
+    "email": "lucas.alvarez@gymup.com",
+    "activo": true
+  }
+}
+
+tests {
+  test("Debe responder con status 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("Debe retornar el socio creado con su Guid generado", function() {
+    const data = res.getBody ? res.getBody() : res.body;
+    expect(data).to.have.property("id");
+    expect(data.nombre).to.equal("Lucas");
+    expect(data.apellido).to.equal("Alvarez");
+    expect(data.email).to.equal("lucas.alvarez@gymup.com");
+    expect(data.activo).to.equal(true);
+  });
+}
+
+script:post-response {
+  const data = res.getBody ? res.getBody() : res.body;
+  if (res.getStatus() === 201 && data && data.id) {
+    bru.setEnvVar("socioId", data.id);
+  }
+}
+

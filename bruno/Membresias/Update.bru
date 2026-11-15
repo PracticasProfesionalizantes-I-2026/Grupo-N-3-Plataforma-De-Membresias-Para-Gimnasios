@@ -1,0 +1,40 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/membresias/{{membresiaId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tipo": "Platinum Pass",
+    "precio": 32000.00,
+    "duracionDias": 60,
+    "socioId": "{{socioId}}"
+  }
+}
+
+tests {
+  test("Debe responder con status 200 OK o 204 No Content al actualizar membresía", function() {
+    expect([200, 204]).to.include(res.getStatus());
+  });
+
+  test("Si devuelve cuerpo, debe reflejar el nuevo plan y precio", function() {
+    if (res.getStatus() === 200) {
+      const data = res.getBody ? res.getBody() : res.body;
+      expect(data.tipo).to.equal("Platinum Pass");
+      expect(Number(data.precio)).to.equal(32000);
+      expect(data.duracionDias).to.equal(60);
+    }
+  });
+}
+

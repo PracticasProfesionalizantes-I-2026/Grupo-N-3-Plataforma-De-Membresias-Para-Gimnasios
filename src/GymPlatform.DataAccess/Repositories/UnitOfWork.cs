@@ -1,4 +1,6 @@
+using System.Data;
 using GymPlatform.DataAccess.Context;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GymPlatform.DataAccess.Repositories;
@@ -13,13 +15,13 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
     }
 
-    public async Task BeginTransactionAsync()
+    public async Task BeginTransactionAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
     {
         if (_currentTransaction is not null)
         {
             return;
         }
-        _currentTransaction = await _context.Database.BeginTransactionAsync();
+        _currentTransaction = await _context.Database.BeginTransactionAsync(isolationLevel);
     }
 
     public async Task CommitTransactionAsync()

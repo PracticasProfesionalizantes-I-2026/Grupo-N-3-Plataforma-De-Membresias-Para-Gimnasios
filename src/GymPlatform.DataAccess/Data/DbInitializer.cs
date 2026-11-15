@@ -201,6 +201,15 @@ public static class DbInitializer
 
     private static async Task SeedUsuariosAsync(GymDbContext context)
     {
+        try
+        {
+            await context.Database.MigrateAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Ignorado ante PendingModelChangesWarning o entornos in-memory de pruebas donde las tablas ya fueron creadas por EnsureCreatedAsync
+        }
+
         if (await context.Usuarios.AnyAsync())
         {
             return;

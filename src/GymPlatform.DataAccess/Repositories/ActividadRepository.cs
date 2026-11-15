@@ -25,7 +25,13 @@ public class ActividadRepository : IActividadRepository
 
     public async Task<Actividad?> GetByNombreAsync(string nombre)
     {
-        return await _context.Actividades.AsNoTracking().FirstOrDefaultAsync(a => a.Nombre.ToLower() == nombre.ToLower());
+        // Optimizado con intercalación NOCASE sin .ToLower()
+        return await _context.Actividades.AsNoTracking().FirstOrDefaultAsync(a => a.Nombre == nombre);
+    }
+
+    public async Task<bool> HasAssignedHorariosAsync(Guid id)
+    {
+        return await _context.Horarios.AsNoTracking().AnyAsync(h => h.ActividadId == id);
     }
 
     public async Task<Actividad> CreateAsync(Actividad actividad)

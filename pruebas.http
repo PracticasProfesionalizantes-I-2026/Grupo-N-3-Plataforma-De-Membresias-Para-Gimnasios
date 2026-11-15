@@ -1,0 +1,133 @@
+# REST Client file for GymUp API
+
+@baseUrl = http://localhost:5148
+
+### Login (obtener token)
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "nombreUsuario": "admin",
+  "password": "Admin123!"
+}
+
+@token = {{login.response.body.token}}
+
+# ------------------------------------------------------------
+# Recepcionistas CRUD examples (requires token)
+# ------------------------------------------------------------
+
+### GET all recepcionistas
+GET {{baseUrl}}/api/recepcionistas
+Authorization: Bearer {{token}}
+
+### GET recepcionista by id (reemplazar {{recepcionistaId}})
+GET {{baseUrl}}/api/recepcionistas/{{recepcionistaId}}
+Authorization: Bearer {{token}}
+
+### CREATE recepcionista
+POST {{baseUrl}}/api/recepcionistas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Juan Pérez",
+  "email": "juan.perez@example.com",
+  "telefono": "123456789",
+  "dni": "12345678"
+}
+
+### UPDATE recepcionista (reemplazar {{recepcionistaId}})
+PUT {{baseUrl}}/api/recepcionistas/{{recepcionistaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Juan Pérez Modificado",
+  "telefono": "987654321",
+  "activo": true
+}
+
+### DELETE recepcionista (reemplazar {{recepcionistaId}})
+DELETE {{baseUrl}}/api/recepcionistas/{{recepcionistaId}}
+Authorization: Bearer {{token}}
+
+# ------------------------------------------------------------
+# Socios CRUD examples (requires token)
+# ------------------------------------------------------------
+
+### GET all socios
+GET {{baseUrl}}/api/socios
+Authorization: Bearer {{token}}
+
+### GET socio by id (reemplazar {{socioId}})
+GET {{baseUrl}}/api/socios/{{socioId}}
+Authorization: Bearer {{token}}
+
+### CREATE socio
+POST {{baseUrl}}/api/socios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Laura Gómez",
+  "dni": "11223344",
+  "email": "laura.gomez@example.com",
+  "telefono": "555123456",
+  "fechaNacimiento": "1990-05-15"
+}
+
+### UPDATE socio (reemplazar {{socioId}})
+PUT {{baseUrl}}/api/socios/{{socioId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Laura Gómez Updated",
+  "telefono": "555987654",
+  "activo": true
+}
+
+### DELETE socio (reemplazar {{socioId}})
+DELETE {{baseUrl}}/api/socios/{{socioId}}
+Authorization: Bearer {{token}}
+
+# ------------------------------------------------------------
+# Membresias CRUD examples (requires token)
+# ------------------------------------------------------------
+
+### GET all membresias
+GET {{baseUrl}}/api/membresias
+Authorization: Bearer {{token}}
+
+### GET membresia by id (reemplazar {{membresiaId}})
+GET {{baseUrl}}/api/membresias/{{membresiaId}}
+Authorization: Bearer {{token}}
+
+### CREATE membresia
+POST {{baseUrl}}/api/membresias
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "socioId": "{{socioId}}",
+  "planMembresiaId": "{{planId}}",
+  "fechaInicio": "2023-01-01",
+  "fechaFin": "2023-12-31"
+}
+
+### UPDATE membresia (reemplazar {{membresiaId}})
+PUT {{baseUrl}}/api/membresias/{{membresiaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "fechaFin": "2024-12-31",
+  "activo": true
+}
+
+### DELETE membresia (reemplazar {{membresiaId}})
+DELETE {{baseUrl}}/api/membresias/{{membresiaId}}
+Authorization: Bearer {{token}}
+

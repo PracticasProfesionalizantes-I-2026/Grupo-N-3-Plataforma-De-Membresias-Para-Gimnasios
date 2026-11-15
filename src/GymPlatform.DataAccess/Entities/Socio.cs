@@ -12,4 +12,5 @@ public class Socio
     public bool Activo { get; set; } = true;
 
     public ICollection<Membresia> Membresias { get; set; } = new List<Membresia>();
+    public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }

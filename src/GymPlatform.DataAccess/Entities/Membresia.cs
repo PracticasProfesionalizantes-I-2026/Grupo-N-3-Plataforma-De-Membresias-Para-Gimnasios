@@ -14,6 +14,7 @@ public class Membresia
 
     public DateTime FechaInicio { get; set; }
     public DateTime FechaVencimiento { get; set; }
+    public bool Activo { get; set; } = true;
     public EstadoMembresia Estado { get; set; } = EstadoMembresia.Activa;
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 

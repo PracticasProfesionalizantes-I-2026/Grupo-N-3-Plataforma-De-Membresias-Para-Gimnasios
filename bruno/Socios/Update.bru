@@ -1,0 +1,39 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/socios/{{socioId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "Lucas Martin",
+    "apellido": "Alvarez Gomez",
+    "email": "lucas.alvarez@gymup.com",
+    "activo": true
+  }
+}
+
+tests {
+  test("Debe responder con status 200 OK o 204 No Content al actualizar", function() {
+    expect([200, 204]).to.include(res.getStatus());
+  });
+
+  test("Si devuelve cuerpo, debe reflejar los campos actualizados", function() {
+    if (res.getStatus() === 200) {
+      const data = res.getBody ? res.getBody() : res.body;
+      expect(data.nombre).to.equal("Lucas Martin");
+      expect(data.apellido).to.equal("Alvarez Gomez");
+    }
+  });
+}
+

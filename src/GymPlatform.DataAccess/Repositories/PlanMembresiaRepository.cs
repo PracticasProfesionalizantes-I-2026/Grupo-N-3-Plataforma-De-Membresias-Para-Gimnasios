@@ -15,7 +15,11 @@ public class PlanMembresiaRepository : IPlanMembresiaRepository
 
     public async Task<IEnumerable<PlanMembresia>> GetAllAsync()
     {
-        return await _context.PlanesMembresia.AsNoTracking().ToListAsync();
+        // Por defecto se retornan únicamente planes activos
+        return await _context.PlanesMembresia
+            .Where(p => p.Activo)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<PlanMembresia?> GetByIdAsync(Guid id)
@@ -25,7 +29,8 @@ public class PlanMembresiaRepository : IPlanMembresiaRepository
 
     public async Task<PlanMembresia?> GetByNombreAsync(string nombre)
     {
-        return await _context.PlanesMembresia.AsNoTracking().FirstOrDefaultAsync(p => p.Nombre.ToLower() == nombre.ToLower());
+        // Optimizado con intercalación NOCASE sin .ToLower()
+        return await _context.PlanesMembresia.AsNoTracking().FirstOrDefaultAsync(p => p.Nombre == nombre);
     }
 
     public async Task<bool> HasAssignedHorariosAsync(Guid id)

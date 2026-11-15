@@ -1,0 +1,36 @@
+meta {
+  name: Casos de Error (400 - 404 - 409)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/socios
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "",
+    "apellido": "",
+    "email": "correo-invalido-sin-arroba",
+    "activo": false
+  }
+}
+
+tests {
+  test("Debe retornar código de error de cliente esperado (400 Bad Request, 404 Not Found o 409 Conflict)", function() {
+    expect([400, 404, 409]).to.include(res.getStatus());
+  });
+
+  test("La respuesta debe contener información o detalles del error", function() {
+    const data = res.getBody ? res.getBody() : res.body;
+    expect(data).to.be.an("object");
+  });
+}
+

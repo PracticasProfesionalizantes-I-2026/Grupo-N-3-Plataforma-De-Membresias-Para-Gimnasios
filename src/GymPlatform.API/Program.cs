@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using GymPlatform.API.Handlers;
 using GymPlatform.BusinessLogic.ExternalServices;
 using GymPlatform.BusinessLogic.Interfaces;
 using GymPlatform.BusinessLogic.Services;
@@ -13,6 +14,7 @@ using GymPlatform.DataAccess.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +32,10 @@ builder.Services.AddScoped<IPlanMembresiaRepository, PlanMembresiaRepository>();
 builder.Services.AddScoped<IActividadRepository, ActividadRepository>();
 builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IMembresiaRepository, MembresiaRepository>();
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IPagoRepository, PagoRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Inyección de Dependencias por Constructor (BusinessLogic / Services)
 builder.Services.AddScoped<ISocioService, SocioService>();
@@ -37,28 +43,24 @@ builder.Services.AddScoped<IPlanMembresiaService, PlanMembresiaService>();
 builder.Services.AddScoped<IActividadService, ActividadService>();
 builder.Services.AddScoped<IHorarioService, HorarioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Repositorios adicionales requeridos por los Casos de Uso (CU-01, CU-03)
-builder.Services.AddScoped<IMembresiaRepository, MembresiaRepository>();
-builder.Services.AddScoped<IPagoRepository, PagoRepository>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IMembresiaService, MembresiaService>();
+builder.Services.AddScoped<IReservaService, ReservaService>();
 
 // Servicios externos simulados (Notificación y Pasarela de Pago)
-// En producción: reemplazar por implementaciones reales (SMTP, Stripe, MercadoPago, etc.)
 builder.Services.AddScoped<INotificacionService, SimulatedEmailNotificacionService>();
 builder.Services.AddScoped<IPasarelaPagoService, SimulatedPasarelaPagoService>();
 
-// ── Casos de Uso (Use Cases) ──────────────────────────────────────────────────
-// CU-01: Registrar Socio (con membresía inicial y notificación de bienvenida resiliente)
+// Casos de Uso (Use Cases)
 builder.Services.AddScoped<IRegistrarSocioUseCase, RegistrarSocioUseCase>();
-// CU-02: Gestionar Planes de Membresía (CRUD con validación defensiva y restricciones amigables)
 builder.Services.AddScoped<IGestionarPlanesUseCase, GestionarPlanesUseCase>();
-// CU-03: Renovar Membresía (pago transaccional con pasarela externa y manejo de fallos)
 builder.Services.AddScoped<IRenovarMembresiaUseCase, RenovarMembresiaUseCase>();
-// CU-04: Gestionar Clases y Horarios (con detección de solapamiento RN-03)
 builder.Services.AddScoped<IGestionarClasesHorariosUseCase, GestionarClasesHorariosUseCase>();
 
-// Configuración de Autenticación y Autorización basada en Roles mediante Tokens JWT
+// Issue #9: Centralizar Manejo de Excepciones Global (RFC 7807 ProblemDetails)
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
+// Issue #2: Configuración de Autenticación JWT y Roles
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -79,17 +81,52 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        RoleClaimType = ClaimTypes.Role, // Configuración explícita del RoleClaimType
+        RoleClaimType = ClaimTypes.Role,
         NameClaimType = ClaimTypes.Name
     };
 });
 builder.Services.AddAuthorization();
 
-// Controladores y OpenAPI
+// Controladores
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+
+// Issue #2: Configurar esquema SecurityScheme Bearer en OpenAPI / Scalar UI
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info.Title = "GYM UP API Documentation";
+        document.Info.Version = "v1";
+        document.Info.Description = "API RESTful backend construida con .NET 10 para la gestión integral de gimnasios.";
+
+        var securityScheme = new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Description = "Ingrese el token JWT Bearer en el formato: Bearer {token}",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["Bearer"] = securityScheme;
+
+        document.Security ??= new List<OpenApiSecurityRequirement>();
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+        });
+
+        return Task.CompletedTask;
+    });
+});
 
 var app = builder.Build();
+
+// Manejador global de excepciones al inicio del pipeline HTTP
+app.UseExceptionHandler();
 
 // Inicialización de la base de datos y seeding de datos de prueba al arranque
 using (var scope = app.Services.CreateScope())
@@ -98,7 +135,7 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.InitializeAsync(context);
 }
 
-// Configuración del pipeline HTTP
+// Configuración de OpenAPI y Scalar UI en Development
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

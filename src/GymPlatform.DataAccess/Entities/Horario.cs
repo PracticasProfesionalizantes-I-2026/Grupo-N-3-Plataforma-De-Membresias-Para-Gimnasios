@@ -15,4 +15,6 @@ public class Horario
     public TimeOnly HoraInicio { get; set; }
     public TimeOnly HoraFin { get; set; }
     public int CupoMaximo { get; set; }
+
+    public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }

@@ -1,0 +1,29 @@
+meta {
+  name: Get All
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/recepcionistas
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJiMDMyNmNjNS0zNDE0LTQyNTUtYWU4NC0yY2I1MmMwNjhmNzkiLCJ1bmlxdWVfbmFtZSI6ImFkbWluIiwiZW1haWwiOiJhZG1pbkBneW11cC5jb20iLCJyb2xlIjoiQWRtaW5pc3RyYWRvciIsIk5vbWJyZUNvbXBsZXRvIjoiQWRtaW5pc3RyYWRvciBQcmluY2lwYWwiLCJqdGkiOiJkOWNmM2E0My05ZTE4LTQ5NDYtODMxMi1iYTFhNDY4ZTg2NjQiLCJuYmYiOjE3OTQ3NjMwNjQsImV4cCI6MTc5NDc5MTg2NCwiaWF0IjoxNzk0NzYzMDY0LCJpc3MiOiJHeW1QbGF0Zm9ybUFQSSIsImF1ZCI6Ikd5bVBsYXRmb3JtQ2xpZW50In0.mhvQB1C0WUUTm_2PeS7sRRwkzNP1gxvGR4RVxoqL2PU
+}
+
+tests {
+  test("Debe responder con status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("El cuerpo de la respuesta debe ser una lista de recepcionistas", function() {
+    expect(res.getBody()).to.be.an("array");
+  });
+}

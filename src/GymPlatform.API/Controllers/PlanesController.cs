@@ -1,6 +1,6 @@
 using GymPlatform.BusinessLogic.Interfaces;
+using GymPlatform.Shared.Common;
 using GymPlatform.Shared.DTOs;
-using GymPlatform.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,26 +13,45 @@ namespace GymPlatform.API.Controllers;
 public class PlanesController : ControllerBase
 {
     private readonly IPlanMembresiaService _planService;
+    private readonly ILogger<PlanesController> _logger;
 
-    public PlanesController(IPlanMembresiaService planService)
+    public PlanesController(IPlanMembresiaService planService, ILogger<PlanesController> logger)
     {
         _planService = planService;
+        _logger = logger;
     }
 
     [HttpGet]
     [Authorize(Roles = "Administrador,Entrenador,Socio,Recepcionista")]
     [ProducesResponseType(typeof(IEnumerable<PlanMembresiaResponseDTO>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(PagedResult<PlanMembresiaResponseDTO>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int? page = null,
+        [FromQuery] int? pageSize = null,
+        [FromQuery] string? search = null)
     {
-        try
+        var planes = await _planService.GetAllAsync();
+
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            var planes = await _planService.GetAllAsync();
-            return Ok(planes);
+            var term = search.Trim();
+            planes = planes.Where(p =>
+                p.Nombre.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                p.Descripcion.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
-        catch (GymException ex)
+
+        // Issue #13: Paginación si se especifican page o pageSize
+        if (page.HasValue || pageSize.HasValue)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
+            var pageNumber = Math.Max(1, page ?? 1);
+            var size = Math.Clamp(pageSize ?? 10, 1, 100);
+            var total = planes.Count();
+            var pagedItems = planes.Skip((pageNumber - 1) * size).Take(size).ToList();
+
+            return Ok(new PagedResult<PlanMembresiaResponseDTO>(pagedItems, total, pageNumber, size));
         }
+
+        return Ok(planes);
     }
 
     [HttpGet("{id:guid}")]
@@ -41,19 +60,8 @@ public class PlanesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
-        try
-        {
-            var plan = await _planService.GetByIdAsync(id);
-            return Ok(plan);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { error = ex.Message });
-        }
-        catch (GymException ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
-        }
+        var plan = await _planService.GetByIdAsync(id);
+        return Ok(plan);
     }
 
     [HttpPost]
@@ -63,23 +71,8 @@ public class PlanesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] PlanMembresiaCreateDTO dto)
     {
-        try
-        {
-            var creado = await _planService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = creado.Id }, creado);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (ConflictException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-        catch (GymException ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
-        }
+        var created = await _planService.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:guid}")]
@@ -90,27 +83,19 @@ public class PlanesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(Guid id, [FromBody] PlanMembresiaUpdateDTO dto)
     {
-        try
-        {
-            var actualizado = await _planService.UpdateAsync(id, dto);
-            return Ok(actualizado);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { error = ex.Message });
-        }
-        catch (ConflictException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-        catch (GymException ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
-        }
+        var updated = await _planService.UpdateAsync(id, dto);
+        return Ok(updated);
+    }
+
+    // Issue #6: Endpoint PATCH para desactivación lógica de planes
+    [HttpPatch("{id:guid}/desactivar")]
+    [Authorize(Roles = "Administrador")]
+    [ProducesResponseType(typeof(PlanMembresiaResponseDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Desactivar(Guid id)
+    {
+        var plan = await _planService.DesactivarAsync(id);
+        return Ok(plan);
     }
 
     [HttpDelete("{id:guid}")]
@@ -120,22 +105,7 @@ public class PlanesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        try
-        {
-            await _planService.DeleteAsync(id);
-            return NoContent();
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { error = ex.Message });
-        }
-        catch (ConflictException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-        catch (GymException ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
-        }
+        await _planService.DeleteAsync(id);
+        return NoContent();
     }
 }
