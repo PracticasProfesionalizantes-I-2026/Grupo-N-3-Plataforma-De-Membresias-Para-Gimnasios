@@ -1,0 +1,48 @@
+meta {
+  name: Crear-Consultar-Actualizar-Eliminar
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/socios
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "Flujo Integrado",
+    "apellido": "E2E GymUp",
+    "email": "flujo.e2e@gymup.com",
+    "activo": true
+  }
+}
+
+tests {
+  test("Paso 1 (Crear): Debe responder 201 Created con el nuevo recurso", function() {
+    expect(res.getStatus()).to.equal(201);
+    const data = res.getBody ? res.getBody() : res.body;
+    expect(data).to.have.property("id");
+  });
+
+  test("Validación de integridad del flujo E2E", function() {
+    const data = res.getBody ? res.getBody() : res.body;
+    expect(data.nombre).to.equal("Flujo Integrado");
+    expect(data.email).to.equal("flujo.e2e@gymup.com");
+    expect(data.activo).to.equal(true);
+  });
+}
+
+script:post-response {
+  const data = res.getBody ? res.getBody() : res.body;
+  if (res.getStatus() === 201 && data && data.id) {
+    bru.setEnvVar("flujoSocioId", data.id);
+    bru.setEnvVar("socioId", data.id);
+  }
+}
+

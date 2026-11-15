@@ -15,7 +15,8 @@ public class SocioRepository : ISocioRepository
 
     public async Task<IEnumerable<Socio>> GetAllAsync()
     {
-        return await _context.Socios.AsNoTracking().ToListAsync();
+        // Por defecto se retornan únicamente socios activos
+        return await _context.Socios.Where(s => s.Activo).AsNoTracking().ToListAsync();
     }
 
     public async Task<Socio?> GetByIdAsync(Guid id)
@@ -30,6 +31,7 @@ public class SocioRepository : ISocioRepository
 
     public async Task<Socio?> GetByEmailAsync(string email)
     {
+        // Con intercalación NOCASE no se requiere .ToLower()
         return await _context.Socios.AsNoTracking().FirstOrDefaultAsync(s => s.Email == email);
     }
 

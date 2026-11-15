@@ -10,4 +10,7 @@ public class Socio
     public DateOnly FechaNacimiento { get; set; }
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public bool Activo { get; set; } = true;
+
+    public ICollection<Membresia> Membresias { get; set; } = new List<Membresia>();
+    public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }

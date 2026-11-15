@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using GymPlatform.Shared.DTOs;
 using Xunit;
@@ -14,9 +15,23 @@ public class EndpointsIntegrationTests : IClassFixture<CustomWebApplicationFacto
         _client = factory.CreateClient();
     }
 
+    private async Task AuthenticateAsAdminAsync()
+    {
+        if (_client.DefaultRequestHeaders.Authorization == null)
+        {
+            var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequestDTO("admin", "Admin123!"));
+            loginResp.EnsureSuccessStatusCode();
+            var loginData = await loginResp.Content.ReadFromJsonAsync<LoginResponseDTO>();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginData!.Token);
+        }
+    }
+
     [Fact]
     public async Task GetSocios_ReturnsSuccessAndList()
     {
+        // Arrange
+        await AuthenticateAsAdminAsync();
+
         // Act
         var response = await _client.GetAsync("/api/socios");
 
@@ -30,6 +45,7 @@ public class EndpointsIntegrationTests : IClassFixture<CustomWebApplicationFacto
     public async Task PostSocio_ValidPayload_Returns201Created()
     {
         // Arrange (CU-01 Camino feliz)
+        await AuthenticateAsAdminAsync();
         var dto = new SocioCreateDTO(
             "Agustin Rossi",
             "40111222",
@@ -52,6 +68,7 @@ public class EndpointsIntegrationTests : IClassFixture<CustomWebApplicationFacto
     public async Task PostSocio_DuplicateDni_Returns409Conflict()
     {
         // Arrange (CU-01 3a Duplicidad)
+        await AuthenticateAsAdminAsync();
         var dto1 = new SocioCreateDTO(
             "Maria Becerra",
             "41000999",
@@ -80,6 +97,7 @@ public class EndpointsIntegrationTests : IClassFixture<CustomWebApplicationFacto
     public async Task PostPlan_NegativePrice_Returns400BadRequest()
     {
         // Arrange (CU-02 2a Datos inválidos)
+        await AuthenticateAsAdminAsync();
         var dto = new PlanMembresiaCreateDTO(
             "Plan Negativo",
             "Descripcion",
@@ -98,6 +116,7 @@ public class EndpointsIntegrationTests : IClassFixture<CustomWebApplicationFacto
     public async Task PostPlan_ValidPayload_Returns201Created()
     {
         // Arrange (CU-02 Camino feliz)
+        await AuthenticateAsAdminAsync();
         var dto = new PlanMembresiaCreateDTO(
             "Plan Semestral Promo",
             "Acceso semestral con beneficios",
@@ -116,6 +135,7 @@ public class EndpointsIntegrationTests : IClassFixture<CustomWebApplicationFacto
     public async Task PostHorario_ConflictSchedule_Returns409Conflict()
     {
         // Arrange (CU-03 3a Solapamiento de horarios)
+        await AuthenticateAsAdminAsync();
         // 1. Crear actividad y plan
         var actResp = await _client.PostAsJsonAsync("/api/actividades", new ActividadCreateDTO("Boxeo", "Clases de boxeo"));
         var act = await actResp.Content.ReadFromJsonAsync<ActividadResponseDTO>();

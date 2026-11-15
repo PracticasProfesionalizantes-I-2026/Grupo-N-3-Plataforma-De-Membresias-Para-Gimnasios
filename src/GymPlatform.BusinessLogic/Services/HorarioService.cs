@@ -1,8 +1,10 @@
+using System.Data;
 using GymPlatform.BusinessLogic.Interfaces;
 using GymPlatform.DataAccess.Entities;
 using GymPlatform.DataAccess.Repositories;
 using GymPlatform.Shared.DTOs;
 using GymPlatform.Shared.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace GymPlatform.BusinessLogic.Services;
 
@@ -11,19 +13,26 @@ public class HorarioService : IHorarioService
     private readonly IHorarioRepository _horarioRepository;
     private readonly IActividadRepository _actividadRepository;
     private readonly IPlanMembresiaRepository _planRepository;
+    private readonly IUnitOfWork? _unitOfWork;
+    private readonly ILogger<HorarioService>? _logger;
 
     public HorarioService(
         IHorarioRepository horarioRepository,
         IActividadRepository actividadRepository,
-        IPlanMembresiaRepository planRepository)
+        IPlanMembresiaRepository planRepository,
+        IUnitOfWork? unitOfWork = null,
+        ILogger<HorarioService>? logger = null)
     {
         _horarioRepository = horarioRepository;
         _actividadRepository = actividadRepository;
         _planRepository = planRepository;
+        _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<HorarioResponseDTO>> GetAllAsync()
     {
+        _logger?.LogInformation("Consultando todos los horarios.");
         var horarios = await _horarioRepository.GetAllAsync();
         var response = new List<HorarioResponseDTO>();
         foreach (var horario in horarios)
@@ -35,9 +44,11 @@ public class HorarioService : IHorarioService
 
     public async Task<HorarioResponseDTO> GetByIdAsync(Guid id)
     {
+        _logger?.LogInformation("Buscando horario por ID: {HorarioId}", id);
         var horario = await _horarioRepository.GetByIdAsync(id);
         if (horario is null)
         {
+            _logger?.LogWarning("No se encontró el horario con ID: {HorarioId}", id);
             throw new NotFoundException($"No se encontró el horario con identificador {id}.");
         }
         return MapToResponseDTO(horario);
@@ -45,6 +56,8 @@ public class HorarioService : IHorarioService
 
     public async Task<HorarioResponseDTO> CreateAsync(HorarioCreateDTO dto)
     {
+        _logger?.LogInformation("Iniciando creación de horario para actividad {ActividadId} y plan {PlanId}", dto.ActividadId, dto.PlanMembresiaId);
+
         // 1. Validaciones básicas de campos y tiempos (HTTP 400)
         if (string.IsNullOrWhiteSpace(dto.Profesor))
         {
@@ -61,48 +74,82 @@ public class HorarioService : IHorarioService
             throw new ValidationException("La hora de inicio debe ser estrictamente anterior a la hora de fin.");
         }
 
-        if (dto.CupoMaximo <= 0)
+        // Issue #11: Rango estricto 1 a 500 para CupoMaximo
+        if (dto.CupoMaximo < 1 || dto.CupoMaximo > 500)
         {
-            throw new ValidationException("El cupo máximo debe ser mayor a cero.");
+            throw new ValidationException("El cupo máximo debe estar comprendido estrictamente entre 1 y 500.");
         }
 
-        // 2. Existencia de entidades relacionadas (HTTP 404)
-        var actividad = await _actividadRepository.GetByIdAsync(dto.ActividadId);
-        if (actividad is null)
+        // Issue #5: Nivel de aislamiento serializable para prevenir carreras y solapamientos
+        if (_unitOfWork != null)
         {
-            throw new NotFoundException($"No existe la actividad especificada con ID {dto.ActividadId}.");
+            await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable);
         }
 
-        var plan = await _planRepository.GetByIdAsync(dto.PlanMembresiaId);
-        if (plan is null)
+        try
         {
-            throw new NotFoundException($"No existe el plan de membresía especificado con ID {dto.PlanMembresiaId}.");
+            // 2. Existencia de entidades relacionadas (HTTP 404)
+            var actividad = await _actividadRepository.GetByIdAsync(dto.ActividadId);
+            if (actividad is null)
+            {
+                _logger?.LogWarning("Actividad no encontrada: {ActividadId}", dto.ActividadId);
+                throw new NotFoundException($"No existe la actividad especificada con ID {dto.ActividadId}.");
+            }
+
+            var plan = await _planRepository.GetByIdAsync(dto.PlanMembresiaId);
+            if (plan is null)
+            {
+                _logger?.LogWarning("Plan de membresía no encontrado: {PlanId}", dto.PlanMembresiaId);
+                throw new NotFoundException($"No existe el plan de membresía especificado con ID {dto.PlanMembresiaId}.");
+            }
+
+            // Issue #6: Rechazar asignación de horarios a planes inactivos
+            if (!plan.Activo)
+            {
+                _logger?.LogWarning("Intento de asignar horario a un plan inactivo: {PlanId}", dto.PlanMembresiaId);
+                throw new ValidationException("No se pueden asignar horarios a un plan de membresía inactivo.");
+            }
+
+            // 3. RN-03: Detección de solapamiento de horarios (HTTP 409) bajo aislamiento Serializable
+            await ValidarSolapamientoAsync(dto.Profesor, dto.Sala, dto.DiaSemana, dto.HoraInicio, dto.HoraFin, null);
+
+            var horario = new Horario
+            {
+                ActividadId = dto.ActividadId,
+                PlanMembresiaId = dto.PlanMembresiaId,
+                Profesor = dto.Profesor.Trim(),
+                Sala = dto.Sala.Trim(),
+                DiaSemana = dto.DiaSemana,
+                HoraInicio = dto.HoraInicio,
+                HoraFin = dto.HoraFin,
+                CupoMaximo = dto.CupoMaximo
+            };
+
+            var creado = await _horarioRepository.CreateAsync(horario);
+            creado.Actividad = actividad;
+            creado.PlanMembresia = plan;
+
+            if (_unitOfWork != null)
+            {
+                await _unitOfWork.CommitTransactionAsync();
+            }
+
+            _logger?.LogInformation("Horario creado exitosamente con ID: {HorarioId}", creado.Id);
+            return MapToResponseDTO(creado);
         }
-
-        // 3. RN-03: Detección de solapamiento de horarios (HTTP 409)
-        await ValidarSolapamientoAsync(dto.Profesor, dto.Sala, dto.DiaSemana, dto.HoraInicio, dto.HoraFin, null);
-
-        var horario = new Horario
+        catch
         {
-            ActividadId = dto.ActividadId,
-            PlanMembresiaId = dto.PlanMembresiaId,
-            Profesor = dto.Profesor.Trim(),
-            Sala = dto.Sala.Trim(),
-            DiaSemana = dto.DiaSemana,
-            HoraInicio = dto.HoraInicio,
-            HoraFin = dto.HoraFin,
-            CupoMaximo = dto.CupoMaximo
-        };
-
-        var creado = await _horarioRepository.CreateAsync(horario);
-        creado.Actividad = actividad;
-        creado.PlanMembresia = plan;
-
-        return MapToResponseDTO(creado);
+            if (_unitOfWork != null)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+            }
+            throw;
+        }
     }
 
     public async Task<HorarioResponseDTO> UpdateAsync(Guid id, HorarioUpdateDTO dto)
     {
+        _logger?.LogInformation("Actualizando horario ID: {HorarioId}", id);
         var horario = await _horarioRepository.GetByIdAsync(id);
         if (horario is null)
         {
@@ -124,9 +171,9 @@ public class HorarioService : IHorarioService
             throw new ValidationException("La hora de inicio debe ser estrictamente anterior a la hora de fin.");
         }
 
-        if (dto.CupoMaximo <= 0)
+        if (dto.CupoMaximo < 1 || dto.CupoMaximo > 500)
         {
-            throw new ValidationException("El cupo máximo debe ser mayor a cero.");
+            throw new ValidationException("El cupo máximo debe estar comprendido estrictamente entre 1 y 500.");
         }
 
         var actividad = await _actividadRepository.GetByIdAsync(dto.ActividadId);
@@ -141,7 +188,11 @@ public class HorarioService : IHorarioService
             throw new NotFoundException($"No existe el plan de membresía especificado con ID {dto.PlanMembresiaId}.");
         }
 
-        // RN-03: Validar solapamientos excluyendo el horario actual
+        if (!plan.Activo)
+        {
+            throw new ValidationException("No se pueden asignar horarios a un plan de membresía inactivo.");
+        }
+
         await ValidarSolapamientoAsync(dto.Profesor, dto.Sala, dto.DiaSemana, dto.HoraInicio, dto.HoraFin, id);
 
         horario.ActividadId = dto.ActividadId;
@@ -157,11 +208,13 @@ public class HorarioService : IHorarioService
         horario.Actividad = actividad;
         horario.PlanMembresia = plan;
 
+        _logger?.LogInformation("Horario ID {HorarioId} actualizado.", id);
         return MapToResponseDTO(horario);
     }
 
     public async Task DeleteAsync(Guid id)
     {
+        _logger?.LogInformation("Eliminando horario ID: {HorarioId}", id);
         var horario = await _horarioRepository.GetByIdAsync(id);
         if (horario is null)
         {
@@ -169,6 +222,7 @@ public class HorarioService : IHorarioService
         }
 
         await _horarioRepository.DeleteAsync(horario);
+        _logger?.LogInformation("Horario ID {HorarioId} eliminado.", id);
     }
 
     private async Task ValidarSolapamientoAsync(string profesor, string sala, DayOfWeek diaSemana, TimeOnly inicio, TimeOnly fin, Guid? horarioIdExcluido)
@@ -184,6 +238,7 @@ public class HorarioService : IHorarioService
 
             if (HaySolapamiento(inicio, fin, h.HoraInicio, h.HoraFin))
             {
+                _logger?.LogWarning("Conflicto de horario para profesor '{Profesor}' los días {Dia}", profesor, diaSemana);
                 throw new ScheduleConflictException($"El profesor '{profesor}' ya tiene asignada una actividad los días {diaSemana} entre las {h.HoraInicio} y las {h.HoraFin}.");
             }
         }
@@ -199,6 +254,7 @@ public class HorarioService : IHorarioService
 
             if (HaySolapamiento(inicio, fin, h.HoraInicio, h.HoraFin))
             {
+                _logger?.LogWarning("Conflicto de horario para sala '{Sala}' los días {Dia}", sala, diaSemana);
                 throw new ScheduleConflictException($"La sala '{sala}' ya se encuentra ocupada los días {diaSemana} entre las {h.HoraInicio} y las {h.HoraFin}.");
             }
         }

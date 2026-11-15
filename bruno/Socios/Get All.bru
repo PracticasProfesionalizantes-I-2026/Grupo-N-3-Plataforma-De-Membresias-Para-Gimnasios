@@ -1,0 +1,26 @@
+meta {
+  name: Get All
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/socios
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("Debe responder con status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("El cuerpo de la respuesta debe ser una lista de socios", function() {
+    expect(res.getBody()).to.be.an("array");
+  });
+}
+

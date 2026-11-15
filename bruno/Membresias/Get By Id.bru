@@ -1,0 +1,28 @@
+meta {
+  name: Get By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/membresias/{{membresiaId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("Debe responder con status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Debe devolver la membresía con el Id consultado", function() {
+    const data = res.getBody ? res.getBody() : res.body;
+    expect(data).to.be.an("object");
+    expect(data.id).to.equal(bru.getEnvVar("membresiaId"));
+  });
+}
+

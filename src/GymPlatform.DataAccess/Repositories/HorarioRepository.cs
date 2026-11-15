@@ -33,17 +33,19 @@ public class HorarioRepository : IHorarioRepository
 
     public async Task<IEnumerable<Horario>> GetByProfesorAndDiaAsync(string profesor, DayOfWeek diaSemana)
     {
+        // Optimizado con intercalación NOCASE sin .ToLower() para preservar uso de índices B-Tree
         return await _context.Horarios
             .AsNoTracking()
-            .Where(h => h.Profesor.ToLower() == profesor.ToLower() && h.DiaSemana == diaSemana)
+            .Where(h => h.Profesor == profesor && h.DiaSemana == diaSemana)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Horario>> GetBySalaAndDiaAsync(string sala, DayOfWeek diaSemana)
     {
+        // Optimizado con intercalación NOCASE sin .ToLower() para preservar uso de índices B-Tree
         return await _context.Horarios
             .AsNoTracking()
-            .Where(h => h.Sala.ToLower() == sala.ToLower() && h.DiaSemana == diaSemana)
+            .Where(h => h.Sala == sala && h.DiaSemana == diaSemana)
             .ToListAsync();
     }
 

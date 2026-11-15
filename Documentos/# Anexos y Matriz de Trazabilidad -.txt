@@ -1,14 +1,19 @@
 # Anexos y Matriz de Trazabilidad - Sistema Gym Membership
 
 ## 1. Anexo: Códigos HTTP Utilizados
-* **201 Created**: Utilizado cuando un recurso (como un nuevo socio o un plan de membresía) se crea exitosamente en el sistema.
+* **201 Created**: Utilizado cuando un recurso (como un nuevo socio, plan de membresía, horario o actividad) se crea exitosamente en el sistema.
 * **200 OK**: Utilizado para confirmar operaciones de actualización o consulta exitosas.
-* **400 Bad Request**: Utilizado cuando una validación falla (ej. campos vacíos, formato incorrecto de email o precios inválidos).
-* **409 Conflict**: Utilizado cuando existe un conflicto en la lógica de negocio (ej. superposición de horarios de profesores).
+* **400 Bad Request**: Utilizado cuando una validación falla (ej. campos obligatorios faltantes, formato incorrecto de email, edades fuera de rango o precios/cupos inválidos).
+* **401 Unauthorized**: Utilizado cuando la solicitud carece de credenciales de autenticación válidas (token JWT ausente o inválido).
+* **403 Forbidden**: Utilizado cuando el usuario autenticado no posee los roles o permisos requeridos para la operación.
+* **404 Not Found**: Utilizado cuando un recurso solicitado no existe en el sistema.
+* **409 Conflict**: Utilizado cuando existe un conflicto en la lógica de negocio (ej. socio duplicado por DNI/email, nombre de plan o actividad en uso, solapamiento de horarios o dependencia por relaciones existentes).
+* **500 Internal Server Error**: Utilizado ante errores inesperados no controlados en el servidor.
 
 ## 2. Matriz de Trazabilidad
 | ID Caso de Uso | Regla de Negocio Asociada | Código HTTP de Error / Éxito | Estado de Verificación |
 | :--- | :--- | :--- | :--- |
-| **CU-01** | RN-01, RN-02 | 201 Created / 400 Bad Request | Verificado (Test Unitario OK) |
-| **CU-02** | RN-03, RN-04 | 201 Created / 400 Bad Request | Verificado (Test Unitario OK) |
-| **CU-03** | RN-05, RN-06 | 200 OK / 409 Conflict | Verificado (Test de Integración OK) |
+| **CU-01** | RN-01 (Mayoría de edad, formato de correo y unicidad de DNI / Email) | 201 Created / 400 Bad Request / 409 Conflict (Socio ya existente / Duplicado) | Verificado (Tests Unitarios y de Integración OK) |
+| **CU-02** | RN-02 (Precios y duración > 0, unicidad de nombre de plan y restricción de baja con horarios) | 201 Created / 200 OK / 400 Bad Request / 409 Conflict (Plan duplicado o con dependencias) | Verificado (Tests Unitarios y de Integración OK) |
+| **CU-03** | RN-03 (Horas válidas, cupo positivo y no solapamiento temporal de profesor o sala) | 201 Created / 200 OK / 400 Bad Request / 409 Conflict (Conflicto o solapamiento horario) | Verificado (Tests Unitarios y de Integración OK) |
+| **CU-04** | RN-04 (Nombre de actividad obligatorio y único, y restricción de eliminación con horarios asignados) | 201 Created / 200 OK / 400 Bad Request / 409 Conflict (Actividad duplicada o con horarios vinculados) | Verificado (Tests Unitarios y de Integración OK) |

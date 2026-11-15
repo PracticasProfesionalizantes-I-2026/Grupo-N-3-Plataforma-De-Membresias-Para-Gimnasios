@@ -10,4 +10,5 @@ public class PlanMembresia
     public bool Activo { get; set; } = true;
 
     public ICollection<Horario> Horarios { get; set; } = new List<Horario>();
+    public ICollection<Membresia> Membresias { get; set; } = new List<Membresia>();
 }

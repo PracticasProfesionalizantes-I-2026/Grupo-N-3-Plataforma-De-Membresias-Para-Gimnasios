@@ -1,0 +1,22 @@
+meta {
+  name: Delete
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/recepcionistas/{{recepcionistaId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("Debe responder con status 200 OK o 204 No Content al eliminar", function() {
+    expect([200, 204]).to.include(res.getStatus());
+  });
+}
+

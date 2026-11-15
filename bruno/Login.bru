@@ -1,0 +1,29 @@
+meta {
+  name: Login
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: bearer
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nombreUsuario": "admin",
+    "password": "Admin123!"
+  }
+}
+
+vars:pre-request {
+  BaseUrl: http://localhost:5148
+}
+
+script:post-response {\n  const data = res.getBody ? res.getBody() : res.body;\n  if (data && data.token) { bru.setEnvVar(\"token\", data.token); }\n}\n\nsettings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}
